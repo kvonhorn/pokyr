@@ -64,7 +64,7 @@ class Card(int):
 
 class Deck(list):
 
-    _deck = set(Card(c) for c in xrange(52))
+    _deck = set(Card(c) for c in range(52))
 
     def __init__(self, dead=None):
         deck = self._deck if dead is None else self._deck - set(dead)

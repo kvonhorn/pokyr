@@ -32,11 +32,19 @@ The table is populated by the poker_lite.handvalue function.
 """
 
 import itertools
-import poker_lite
-import utils
+if "poker" == __name__ or "poker.poker" == __name__:
+    if __package__ is None or '' == __package__:
+        import sys
+        from os import path
+        sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+        import poker_lite
+        import utils
+        from poker_lite import _IS_FLUSH, _BITS, CARD_MASK
+    else:
+        from . import poker_lite
+        from . import utils
+        from .poker_lite import _IS_FLUSH, _BITS, CARD_MASK
 
-
-from poker_lite import _IS_FLUSH, _BITS, CARD_MASK
 
 _SPECIALKS = (0, 1, 5, 22, 98, 453, 2031, 8698, 22854, 83661, 262349, 636345, 1479181)
 _SUITSHIFT = 23
@@ -46,17 +54,17 @@ _DECK = [_r | (_s << _SUITSHIFT) for _r in _SPECIALKS for _s in (0, 1, 8, 57)]
 
 def _ranks_combos():
     #Yield each possible suitless hand.
-    for i in xrange(13):
-        for j in xrange(i, 13):
-            for k in xrange(j, 13):
-                for l in xrange(k, 13):
-                    for m in xrange(l, 13):
+    for i in range(13):
+        for j in range(i, 13):
+            for k in range(j, 13):
+                for l in range(k, 13):
+                    for m in range(l, 13):
                         if i == j == k == l == m:
                             continue
-                        for n in xrange(m, 13):
+                        for n in range(m, 13):
                             if j == k == l == m == n:
                                 continue
-                            for o in xrange(n, 13):
+                            for o in range(n, 13):
                                 if k == l == m == n == o:
                                     continue
                                 yield i, j, k, l, m, n, o
@@ -65,7 +73,7 @@ def _ranks_combos():
 def _build_ranktable():
     #Returns a dict.
     ranktable = {}
-    offsuits = (i % 4 for i in xrange(1000000))
+    offsuits = (i % 4 for i in range(1000000))
 
     for hand in _ranks_combos():
         key = sum(_SPECIALKS[i] for i in hand)
@@ -206,11 +214,11 @@ def monte_carlo(hands, trials=100000):
     nplayers = len(hands)
     wins = [0 for __ in range(nplayers)]
 
-    nboards = (52 - nplayers * 2) / 5
+    nboards = int((52 - nplayers * 2) / 5)
     scheme = [5] * nboards
     deck = utils.Deck(sum(hands, []))
 
-    for t in xrange(trials / nboards):
+    for t in range(int(trials / nboards)):
         for b in deck.deal(scheme):
             winners = multi_holdem(hands, b)
             nwinners = len(winners)
@@ -266,3 +274,4 @@ def enum2p(h1, h2, board=[]):
 
     ev1 = (wins[0] + .5 * wins[2]) / sum(wins)
     return [ev1, 1.0 - ev1]
+

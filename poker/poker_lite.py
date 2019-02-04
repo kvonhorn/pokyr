@@ -75,9 +75,9 @@ def _build_straighttable():
     BIGGEST_HAND = sum(_RANKS[:28:4])
     RANKS = _RANKS[::4]
     indexes = [range(i, i+5) for i in range(9)] + [[9, 10, 11, 12, 0]]
-    setcards = set(range(13))
+    setcards = set(list(range(13)))
     #the extras are the set of card - straight cards + one higher
-    extras = [setcards - set(i + [i[0] - 1]) for i in indexes]
+    extras = [setcards - set(list(i) + [i[0] - 1]) for i in indexes]
     straights = [sum(RANKS[i] for i in s) for s in indexes]
     table = [0] * (BIGGEST_HAND + 1)
     for i, s in enumerate(straights):
@@ -122,14 +122,14 @@ def _build_flushtable(st=None, lbt=None):
 
 def find_lowbit(n):
     """Return the lowest set index in a 13 bit hand"""
-    for i in xrange(13):
+    for i in range(13):
         if n & (1 << i):
             return i
 
 def _build_lowbittable():
     #this contains the bit itself
     NO_HAND = 0xff
-    return [NO_HAND] + [1 << find_lowbit(n) for n in xrange(1, 1 << 13)]
+    return [NO_HAND] + [1 << find_lowbit(n) for n in range(1, 1 << 13)]
 
 
 def _build_isflush():
@@ -186,7 +186,7 @@ def handvalue(hand):
     #reduce the less paired status of the more paired cards for _phase2
     return _phase2(val ^ (val >> 13))
 
-_rsb = zip(_RANKS,_SUITS,_BITS)
+_rsb = list(zip(_RANKS,_SUITS,_BITS))
 
 def _doboard(board):
     """Return the part of the hand evaluating function after

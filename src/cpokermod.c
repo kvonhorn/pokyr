@@ -18,6 +18,11 @@
 #include "poker_heavy.h"
 #include "Python.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyInt_AsLong PyLong_AsLong
+    #define PyInt_Check PyLong_Check
+#endif
 
 static int convert_cards(PyObject *pycard_list, uint32_t *cards, int ncards){
     int i;
@@ -556,6 +561,83 @@ static PyMethodDef cpokerMethods[] = {
 };
 
 
+// Copied some code from https://docs.python.org/3/howto/cporting.html
+struct module_state {
+    PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+static PyObject *
+error_out(PyObject *m) {
+    struct module_state *st = GETSTATE(m);
+    PyErr_SetString(st->error, "something bad happened");
+    return NULL;
+}
+
+#if PY_MAJOR_VERSION >= 3
+
+static int cpoker_traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int cpoker_clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "cpoker",
+        NULL,
+        sizeof(struct module_state),
+        cpokerMethods,
+        NULL,
+        cpoker_traverse,
+        cpoker_clear,
+        NULL
+};
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC
+PyInit_cpoker(void)
+
+#else
+#define INITERROR return
+
+void
+initcpoker(void)
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+#else
+    PyObject *module = Py_InitModule("cpoker", cpokerMethods);
+#endif
+
+    if (module == NULL)
+        INITERROR;
+    struct module_state *st = GETSTATE(module);
+
+    st->error = PyErr_NewException("cpoker.Error", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(module);
+        INITERROR;
+    }
+
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
+}
+// /adding some code
 
 PyMODINIT_FUNC initcpoker (void)
 {
@@ -564,5 +646,9 @@ PyMODINIT_FUNC initcpoker (void)
     extern uint16_t Straight_Table[8129];
     populate_tables(Rank_Table, Flush_Table, Straight_Table);
 
+#if PY_MAJOR_VERSION < 3
     (void) Py_InitModule("cpoker", cpokerMethods);
+#else
+    return PyModule_Create(&moduledef);
+#endif
 }
