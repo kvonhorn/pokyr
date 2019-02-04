@@ -2,6 +2,8 @@ src/cpokertables.h
 *.pyc
 *.so
 
+.idea/
+
 # Distribution / packaging
 .Python
 env/
