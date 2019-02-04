@@ -1,80 +1,39 @@
 pokyr
 =============
 
-This is a python library that provides routines for very fast poker hand
-comparisons to power hand match ups.
-
-Pure python and c-extention modules are included.  Using the cpoker
-module it should be easy to write python code that will, for example,
-quickly caluculate expected hand strength squared and opponent cluster 
-hand strength [(EHS2/OCHS)](http://poker.cs.ualberta.ca/publications/AAMAS13-abstraction.pdf).
-
-Be aware that the main modules use a lookup table of over 30mb, which in
-the case of the pure python version can take up to a second to build. The
-rank lookup sceme uses 13 magic numbers attributed to the [specialK blog](http://specialk-coding.blogspot.com/2010/04/texas-holdem-7-card-evaluator_23.html),
-which I used to supplement my own algorithm.  A pure python lite version is
-also include that leaves a small memory footprint and is still fast.  A good
-use case might be where you can't use third party modules and have
-limited resources, such as on a free google-app-engine site.
+This is fork of [AC's pokyr library](https://github.com/cleverpiggy/pokyr). I've made some changes so I can use it with
+Python 3, but in the process have broken the C module. :P This is a pure-Python implementation as of this writing
+(4 Feb 2019).
 
 
 Sample
 ------
-Cards are represented by intergers 0-51 and groups of cards are contained
+Cards are represented by integers 0-51 and groups of cards are contained
 in lists.  A Card class is provided for convenience.  The pretty_args
 wrapper allows you to use standard card strings rather than Card objects
 or integers.
 
+
 ```python
->>> from poker import cpoker
->>> from poker.utils import pretty_args
->>> #return the evs of a match between any number of hands
->>> enum = pretty_args(cpoker.full_enumeration)
->>> enum(["AsKd", "8c2s"])
-[0.6753362720638392, 0.32466372793616083]
->>> enum(["AsKd", "7h 8h", "6c 6d"], "Kc 6h 9h")
-[0.021040974529346623, 0.44518272425249167, 0.5337763012181617]
->>> # percentile on river vs all 990 hand combos
->>> pretty_args(cpoker.rivervalue)("As Kd", "Ks Qh Jc 8s 8d")
-0.8585858585858586
+>>> import poker
+>>> mc = poker.utils.pretty_args(poker.monte_carlo)
+# Run a Monte Carlo evaluation of the following matchup
+>>> mc(["AsAd", "7c2h"])
+[0.87452, 0.12547]
+>>> 
+
 ```
+
+
 
 Compile and Install
 -------
-OSX -> Easiest is to install xcode command line tools.
-On Maverick you should be able to open a terminal and just type
+
+### Linux
+
+Close the repo onto your machine, then run
 
 ```
-$ xcode-select --install
+pip3 install path/to/repo
 ```
 
-On older versions you may have to download the entire Xcode from
-the app store.
-
-Linux -> You just need python-dev and gcc and you should be good to go.
-ie. on debian/ubuntu:
-
-```
-$ sudo apt-get install gcc python-dev
-```
-
-Then in any case from the pokyr directory:
-
-```
-$ python setup.py install
-```
-
-There is an issue with later versions of osx and Xcode 5.1.
-If you get the error:
-
-```
-clang: error: unknown argument: '-mno-fused-madd' [-Wunused-command-line-argument-hard-error-in-future]
-```
-
-you can try running this before setup.py:
-
-```
-$ export CFLAGS=-Qunused-arguments
-```
-
-Apple will hopefully fix this problem in a future release.
